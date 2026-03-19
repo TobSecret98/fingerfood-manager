@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fingerfood App</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: -apple-system;
+    background: #f2f2f7;
+}
+
+.container {
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+}
+
+h2 {
+    text-align: center;
+}
+
+input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    font-size: 16px;
+}
+
+.primary {
+    background: black;
+    color: white;
+}
+
+.secondary {
+    background: #e5e5ea;
+}
+
+.hidden {
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div id="login" class="card">
+<h2>Login</h2>
+<input id="email" placeholder="E-Mail">
+<input id="password" type="password" placeholder="Passwort">
+<button class="primary" onclick="login()">Einloggen</button>
+<button class="secondary" onclick="showRegister()">Registrieren</button>
+</div>
+
+<div id="register" class="card hidden">
+<h2>Registrieren</h2>
+<input id="regEmail" placeholder="E-Mail">
+<input id="regPassword" type="password" placeholder="Passwort">
+<button class="primary" onclick="register()">Account erstellen</button>
+<button class="secondary" onclick="showLogin()">Zurück</button>
+</div>
+
+<div id="home" class="card hidden">
+<h2>Fingerfood App 🍢</h2>
+<p id="user"></p>
+<button onclick="logout()">Logout</button>
+</div>
+
+</div>
+
+<script>
+function showRegister() {
+    login.style.display = "none";
+    register.style.display = "block";
+}
+
+function showLogin() {
+    register.style.display = "none";
+    login.style.display = "block";
+}
+
+function register() {
+    const email = regEmail.value;
+    const password = regPassword.value;
+    localStorage.setItem("user", JSON.stringify({email, password}));
+    alert("Registriert!");
+    showLogin();
+}
+
+function login() {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if(user && user.email === email.value && user.password === password.value) {
+        login.style.display = "none";
+        home.style.display = "block";
+        document.getElementById("user").innerText = user.email;
+    } else {
+        alert("Falsche Daten");
+    }
+}
+
+function logout() {
+    home.style.display = "none";
+    login.style.display = "block";
+}
+</script>
+
+</body>
+</html>
