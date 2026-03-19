@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fingerfood Login – Supabase</title>
+  <style>
+    :root {
+      --bg:#f4f5f7;
+      --card:#fff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --primary:#111;
+      --secondary:#ececec;
+      --radius:20px;
+      --ok-bg:#dcfce7;
+      --ok:#166534;
+      --err-bg:#fee2e2;
+      --err:#b91c1c;
+      --info-bg:#e0f2fe;
+      --info:#075985;
+    }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body {
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap {
+      min-height:100vh;
+      padding:calc(env(safe-area-inset-top) + 20px) 18px calc(env(safe-area-inset-bottom) + 24px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .app {
+      width:100%;
+      max-width:430px;
+    }
+    .card {
+      background:var(--card);
+      border-radius:24px;
+      padding:22px;
+      box-shadow:0 10px 30px rgba(0,0,0,.08);
+    }
+    h1 {
+      margin:0 0 6px;
+      font-size:28px;
+      line-height:1.1;
+    }
+    .sub {
+      margin:0 0 18px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.45;
+    }
+    .tabs {
+      display:flex;
+      gap:8px;
+      margin-bottom:18px;
+      background:#f3f4f6;
+      padding:6px;
+      border-radius:14px;
+    }
+    .tab {
+      flex:1;
+      border:none;
+      background:transparent;
+      padding:12px 10px;
+      border-radius:10px;
+      font-size:15px;
+      font-weight:600;
+      color:#4b5563;
+      cursor:pointer;
+    }
+    .tab.active {
+      background:#fff;
+      color:#111;
+      box-shadow:0 1px 4px rgba(0,0,0,.06);
+    }
+    .field { margin-bottom:12px; }
+    .row { display:flex; gap:10px; }
+    .row>.field { flex:1; }
+    label {
+      display:block;
+      margin-bottom:6px;
+      font-size:14px;
+      font-weight:600;
+    }
+    input {
+      width:100%;
+      padding:15px 14px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      font-size:16px;
+      background:#fff;
+      outline:none;
+    }
+    input:focus {
+      border-color:#9ca3af;
+      box-shadow:0 0 0 3px rgba(17,17,17,.06);
+    }
+    button {
+      width:100%;
+      border:none;
+      border-radius:14px;
+      padding:15px 14px;
+      font-size:16px;
+      font-weight:700;
+      min-height:52px;
+      cursor:pointer;
+    }
+    .primary { background:var(--primary); color:#fff; }
+    .secondary { background:var(--secondary); color:#111; margin-top:10px; }
+    .linkBtn {
+      background:none;
+      padding:8px 0 0;
+      min-height:auto;
+      font-size:14px;
+      font-weight:600;
+      color:#374151;
+    }
+    .hidden { display:none; }
+    .msg {
+      margin:0 0 14px;
+      padding:12px 14px;
+      border-radius:14px;
+      font-size:14px;
+      line-height:1.4;
+      display:none;
+      white-space:pre-line;
+    }
+    .msg.show { display:block; }
+    .msg.success { background:var(--ok-bg); color:var(--ok); }
+    .msg.error { background:var(--err-bg); color:var(--err); }
+    .msg.info { background:var(--info-bg); color:var(--info); }
+    .homeBox {
+      background:#f9fafb;
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+      margin-top:14px;
+    }
+    .homeTitle {
+      margin:0 0 6px;
+      font-size:20px;
+      font-weight:800;
+    }
+    .mini {
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.4;
+    }
+    .pill {
+      display:inline-block;
+      background:#eef2ff;
+      color:#3730a3;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
+      margin-top:8px;
+    }
+    .userLine {
+      margin-top:8px;
+      font-size:15px;
+      line-height:1.5;
+      word-break:break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="app">
+      <div class="card">
+        <h1>Fingerfood App</h1>
+        <p class="sub">Echtes Supabase-Login mit Registrierung, Session und Logout.</p>
+
+        <div class="tabs" id="tabs">
+          <button class="tab active" id="tabLogin" type="button">Login</button>
+          <button class="tab" id="tabRegister" type="button">Registrieren</button>
+        </div>
+
+        <div id="message" class="msg"></div>
+
+        <section id="loginView">
+          <div class="field">
+            <label for="loginEmail">E-Mail</label>
+            <input id="loginEmail" type="email" placeholder="name@mail.de" autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="loginPassword">Passwort</label>
+            <input id="loginPassword" type="password" placeholder="Mindestens 6 Zeichen" autocomplete="current-password">
+          </div>
+          <button class="primary" id="loginBtn" type="button">Einloggen</button>
+          <button class="linkBtn" id="toRegisterBtn" type="button">Noch kein Konto? Jetzt registrieren</button>
+        </section>
+
+        <section id="registerView" class="hidden">
+          <div class="row">
+            <div class="field">
+              <label for="firstName">Vorname</label>
+              <input id="firstName" type="text" placeholder="Tobias">
+            </div>
+            <div class="field">
+              <label for="lastName">Nachname</label>
+              <input id="lastName" type="text" placeholder="Enns">
+            </div>
+          </div>
+          <div class="field">
+            <label for="registerEmail">E-Mail</label>
+            <input id="registerEmail" type="email" placeholder="name@mail.de" autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="registerPassword">Passwort</label>
+            <input id="registerPassword" type="password" placeholder="Mindestens 6 Zeichen" autocomplete="new-password">
+          </div>
+          <button class="primary" id="registerBtn" type="button">Account erstellen</button>
+          <button class="linkBtn" id="toLoginBtn" type="button">Schon registriert? Zum Login</button>
+        </section>
+
+        <section id="homeView" class="hidden">
+          <div class="homeBox">
+            <div class="homeTitle">Willkommen</div>
+            <div id="welcomeText" class="userLine"></div>
+            <div class="pill">Supabase aktiv</div>
+            <p class="mini">Die Session bleibt bestehen, bis du dich ausloggst oder Supabase sie beendet.</p>
+          </div>
+          <button class="secondary" id="logoutBtn" type="button">Logout</button>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    const supabase = createClient("https://flnkzgphyspzspcvolrd.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsbmt6Z3BoeXNwenNwY3ZvbHJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5NTM1MTMsImV4cCI6MjA4OTUyOTUxM30.0kPvJt0PE39CdUlj_QpeON0WcgCZYbzNTWIvaXtax9w");
+
+    const tabLogin = document.getElementById("tabLogin");
+    const tabRegister = document.getElementById("tabRegister");
+    const loginView = document.getElementById("loginView");
+    const registerView = document.getElementById("registerView");
+    const homeView = document.getElementById("homeView");
+    const messageBox = document.getElementById("message");
+    const welcomeText = document.getElementById("welcomeText");
+
+    const loginEmail = document.getElementById("loginEmail");
+    const loginPassword = document.getElementById("loginPassword");
+    const firstName = document.getElementById("firstName");
+    const lastName = document.getElementById("lastName");
+    const registerEmail = document.getElementById("registerEmail");
+    const registerPassword = document.getElementById("registerPassword");
+
+    function showMessage(text, type = "info") {
+      messageBox.textContent = text;
+      messageBox.className = "msg show " + type;
+    }
+
+    function hideMessage() {
+      messageBox.textContent = "";
+      messageBox.className = "msg";
+    }
+
+    function setActiveTab(mode) {
+      tabLogin.classList.toggle("active", mode === "login");
+      tabRegister.classList.toggle("active", mode === "register");
+    }
+
+    function showLogin() {
+      setActiveTab("login");
+      loginView.classList.remove("hidden");
+      registerView.classList.add("hidden");
+      homeView.classList.add("hidden");
+    }
+
+    function showRegister() {
+      setActiveTab("register");
+      loginView.classList.add("hidden");
+      registerView.classList.remove("hidden");
+      homeView.classList.add("hidden");
+    }
+
+    function showHome(user) {
+      hideMessage();
+      loginView.classList.add("hidden");
+      registerView.classList.add("hidden");
+      homeView.classList.remove("hidden");
+      tabLogin.classList.remove("active");
+      tabRegister.classList.remove("active");
+
+      const meta = user.user_metadata || {};
+      const fullName = [meta.first_name, meta.last_name].filter(Boolean).join(" ");
+      welcomeText.innerHTML = `
+        <strong>${fullName || "Benutzer"}</strong><br>
+        ${user.email || ""}
+      `;
+    }
+
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    async function registerUser() {
+      hideMessage();
+
+      const first = firstName.value.trim();
+      const last = lastName.value.trim();
+      const email = registerEmail.value.trim().toLowerCase();
+      const password = registerPassword.value;
+
+      if (!first || !last) {
+        showMessage("Bitte Vorname und Nachname eingeben.", "error");
+        return;
+      }
+      if (!validateEmail(email)) {
+        showMessage("Bitte eine gültige E-Mail eingeben.", "error");
+        return;
+      }
+      if (password.length < 6) {
+        showMessage("Das Passwort muss mindestens 6 Zeichen haben.", "error");
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: first,
+            last_name: last
+          }
+        }
+      });
+
+      if (error) {
+        showMessage(error.message, "error");
+        return;
+      }
+
+      firstName.value = "";
+      lastName.value = "";
+      registerEmail.value = "";
+      registerPassword.value = "";
+
+      if (data.session && data.user) {
+        showHome(data.user);
+        showMessage("Registrierung erfolgreich. Du bist direkt eingeloggt.", "success");
+        return;
+      }
+
+      showLogin();
+      showMessage("Registrierung erfolgreich. Prüfe dein E-Mail-Postfach zur Bestätigung, falls E-Mail-Bestätigung in Supabase aktiviert ist.", "info");
+    }
+
+    async function loginUser() {
+      hideMessage();
+      const email = loginEmail.value.trim().toLowerCase();
+      const password = loginPassword.value;
+
+      if (!validateEmail(email)) {
+        showMessage("Bitte eine gültige E-Mail eingeben.", "error");
+        return;
+      }
+      if (!password) {
+        showMessage("Bitte dein Passwort eingeben.", "error");
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        showMessage(error.message, "error");
+        return;
+      }
+
+      loginPassword.value = "";
+      showHome(data.user);
+    }
+
+    async function logoutUser() {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        showMessage(error.message, "error");
+        return;
+      }
+      showLogin();
+      showMessage("Du wurdest ausgeloggt.", "success");
+    }
+
+    tabLogin.addEventListener("click", () => {
+      hideMessage();
+      showLogin();
+    });
+    tabRegister.addEventListener("click", () => {
+      hideMessage();
+      showRegister();
+    });
+    document.getElementById("toRegisterBtn").addEventListener("click", () => {
+      hideMessage();
+      showRegister();
+    });
+    document.getElementById("toLoginBtn").addEventListener("click", () => {
+      hideMessage();
+      showLogin();
+    });
+    document.getElementById("registerBtn").addEventListener("click", registerUser);
+    document.getElementById("loginBtn").addEventListener("click", loginUser);
+    document.getElementById("logoutBtn").addEventListener("click", logoutUser);
+
+    [loginEmail, loginPassword].forEach(el => {
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") loginUser();
+      });
+    });
+
+    [firstName, lastName, registerEmail, registerPassword].forEach(el => {
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") registerUser();
+      });
+    });
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session?.user) {
+      showHome(sessionData.session.user);
+    } else {
+      showLogin();
+    }
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        showHome(session.user);
+      }
+    });
+  </script>
+</body>
+</html>
